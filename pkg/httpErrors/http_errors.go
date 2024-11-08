@@ -16,6 +16,8 @@ var (
 	BadRequest          = errors.New("Bad Request")
 	Unauthorized        = errors.New("Unauthorized")
 	InvalidJWTToken     = errors.New("Invalid JWT token")
+	ErrNoCookie         = errors.New("No cookie")
+	InvalidJWTClaims    = errors.New("Invalid JWT claims")
 	NotFound            = errors.New("Not Found")
 	InternalServerError = errors.New("Internal Server Error")
 	ExistsEmailError    = errors.New("User with given email already exists")

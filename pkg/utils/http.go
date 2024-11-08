@@ -9,6 +9,8 @@ import (
 
 type ReqIDCtxKey struct{}
 
+type UserCtxKey struct{}
+
 func GetRequestID(c echo.Context) string {
 	return c.Request().Header.Get(echo.HeaderXRequestID)
 }

@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/labstack/echo/v4"
+	"user-service/internal/middleware"
 )
 
 type UserHandlers interface {
@@ -10,8 +11,8 @@ type UserHandlers interface {
 	GetUserByEmail() echo.HandlerFunc
 }
 
-func MapUserRoutes(userGroup *echo.Group, h UserHandlers) {
-	userGroup.GET("/:id", h.GetUserById())
-	userGroup.GET("", h.GetUserByEmail())
-	userGroup.POST("", h.CreateUser())
+func MapUserRoutes(userGroup *echo.Group, h UserHandlers, mw *middleware.MiddlewareManager) {
+	userGroup.GET("/:id", h.GetUserById(), mw.AuthJWTMiddleware())
+	userGroup.GET("", h.GetUserByEmail(), mw.AuthJWTMiddleware())
+	userGroup.POST("", h.CreateUser(), mw.AuthJWTMiddleware())
 }

@@ -7,5 +7,5 @@ type User struct {
 	LastName   string `json:"lastName" db:"last_name"`
 	SecondName string `json:"secondName" db:"second_name"`
 	BirthDate  string `json:"birthDate" db:"birth_date" validate:"datetime=2006-01-02"`
-	Sex        string `json:"sex" validate:"required,oneof=F M""`
+	Sex        string `json:"sex" validate:"required,oneof=F M"`
 }
