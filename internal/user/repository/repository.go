@@ -18,8 +18,8 @@ func NewUserRepository(db *sqlx.DB) service.UserRepository {
 
 func (r *userRepository) Create(ctx context.Context, user *models.User) (*models.User, error) {
 	const op = "userRepository.create"
-	query := `INSERT INTO users (email, name, last_name, second_name, birth_date, sex) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`
-	if err := r.Db.QueryRowxContext(ctx, query, &user.Email, &user.Name, &user.LastName, &user.SecondName,
+	query := `INSERT INTO users (id, email, name, last_name, second_name, birth_date, sex) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`
+	if err := r.Db.QueryRowxContext(ctx, query, &user.ID, &user.Email, &user.Name, &user.LastName, &user.SecondName,
 		&user.BirthDate, &user.Sex).StructScan(user); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

@@ -1,21 +1,19 @@
 package middleware
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"user-service/internal/config"
-	"user-service/lib/sl"
 	"user-service/pkg/httpErrors"
-	"user-service/pkg/utils"
 )
 
 func (mw *MiddlewareManager) AuthJWTMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			// Извлекаем токен из куки
 			cookieToken, err := c.Cookie("token")
 			if err != nil {
 				if errors.Is(err, http.ErrNoCookie) {
@@ -25,37 +23,28 @@ func (mw *MiddlewareManager) AuthJWTMiddleware() echo.MiddlewareFunc {
 			}
 
 			token := cookieToken.Value
-
-			sl.Infof(mw.log, "auth middleware token: %s", token)
-			if token != "" {
-
-				if err := mw.validateJWTToken(token, mw.userService, c, mw.cfg); err != nil {
-					mw.log.Error("middleware validateJWTToken", "header JWT", err.Error())
-					return c.JSON(http.StatusUnauthorized, httpErrors.NewUnauthorizedError(httpErrors.Unauthorized))
-				}
-
-				return next(c)
+			if token == "" {
+				return c.JSON(http.StatusUnauthorized, httpErrors.NewUnauthorizedError(httpErrors.Unauthorized))
 			}
 
-			cookie, err := c.Cookie("token")
+			// Валидация и разбор токена
+			claims, err := mw.validateJWTToken(token, mw.userService, c, mw.cfg)
 			if err != nil {
-				mw.log.Error("c.Cookie", "error", err.Error())
+				mw.log.Error("middleware validateJWTToken", "header JWT", err.Error())
 				return c.JSON(http.StatusUnauthorized, httpErrors.NewUnauthorizedError(httpErrors.Unauthorized))
 			}
 
-			if err = mw.validateJWTToken(cookie.Value, mw.userService, c, mw.cfg); err != nil {
-				mw.log.Error("validateJWTToken", "error", err.Error())
-				return c.JSON(http.StatusUnauthorized, httpErrors.NewUnauthorizedError(httpErrors.Unauthorized))
-			}
+			// Добавляем данные из токена в контекст
+			c.Set("user", claims)
 
 			return next(c)
 		}
 	}
 }
 
-func (mw *MiddlewareManager) validateJWTToken(tokenString string, userService UserService, c echo.Context, cfg *config.Config) error {
+func (mw *MiddlewareManager) validateJWTToken(tokenString string, userService UserService, c echo.Context, cfg *config.Config) (map[string]interface{}, error) {
 	if tokenString == "" {
-		return httpErrors.InvalidJWTToken
+		return nil, httpErrors.InvalidJWTToken
 	}
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -67,30 +56,23 @@ func (mw *MiddlewareManager) validateJWTToken(tokenString string, userService Us
 	})
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !token.Valid {
-		return httpErrors.InvalidJWTToken
+		return nil, httpErrors.InvalidJWTToken
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+
+	if !ok {
+		return nil, fmt.Errorf("invalid claims") // todo: Нормальная ошибка
 	}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userUID, ok := claims["uid"].(float64)
-		if !ok {
-			return httpErrors.InvalidJWTClaims
-		}
-
-		userId := int64(userUID)
-		mw.log.Info("uid", "uid", userId)
-		user, err := userService.GetByID(c.Request().Context(), userId)
-		if err != nil {
-			return err
-		}
-		c.Set("user", user)
-
-		ctx := context.WithValue(c.Request().Context(), utils.UserCtxKey{}, user)
-		c.SetRequest(c.Request().WithContext(ctx))
+	data := make(map[string]interface{})
+	for key, value := range claims {
+		data[key] = value
 	}
-	return nil
+
+	return data, nil
 
 }
