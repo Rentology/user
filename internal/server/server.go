@@ -11,7 +11,10 @@ import (
 	"strconv"
 	"syscall"
 	"time"
+	"user-service/internal/broker"
 	"user-service/internal/config"
+	"user-service/internal/user/repository"
+	service2 "user-service/internal/user/service"
 	"user-service/lib/sl"
 )
 
@@ -54,6 +57,13 @@ func (s *Server) Run() error {
 		}
 	}()
 
+	go func() {
+		if err := s.runConsumer(); err != nil {
+			s.log.Error("Error running Consumer: %s", err)
+			os.Exit(1)
+		}
+	}()
+
 	if err := s.MapHandlers(s.echo); err != nil {
 		return err
 	}
@@ -68,4 +78,31 @@ func (s *Server) Run() error {
 
 	s.log.Info("Server Exited Properly")
 	return s.echo.Server.Shutdown(ctx)
+
+}
+
+func (s *Server) runConsumer() error {
+	brokerConn, err := broker.NewBroker("amqp://guest:guest@localhost:5672/")
+	if err != nil {
+		s.log.Error("Ошибка подключения к RabbitMQ", slog.String("error", err.Error()))
+		return err
+	}
+	// defer brokerConn.Close() перемещен в shutdown секцию
+	s.log.Info("RabbitMQ connection established.")
+	repo := repository.NewUserRepository(s.db)
+	service := service2.NewUserService(s.cfg, repo, s.log)
+	userConsumer, err := broker.NewUserConsumer(service, brokerConn, "user_queue", s.log)
+	if err != nil {
+		s.log.Error("Ошибка создания consumer", slog.String("error", err.Error()))
+		return err
+	}
+
+	ctx := context.Background()
+	go func() {
+		if err := userConsumer.Run(ctx); err != nil {
+			s.log.Error("Ошибка запуска consumer", slog.String("error", err.Error()))
+		}
+	}()
+
+	return nil
 }
