@@ -25,7 +25,7 @@ func main() {
 	psqlDB, err := db.NewPsqlDB(cfg)
 
 	if err != nil {
-		log.Error("failed to connect to postgresq", "error", err)
+		log.Error("failed to connect to postgresql", "error", err)
 		os.Exit(1)
 	} else {
 		log.Info("Postgres connected", "status", psqlDB.Stats())
