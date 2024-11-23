@@ -41,7 +41,7 @@ func (s *userService) Create(ctx context.Context, user *models.User) (*models.Us
 		return nil, err
 	}
 
-	formattedDate, err := utils.ParseDate(*user.BirthDate)
+	formattedDate, err := utils.ParseDate(user.BirthDate)
 
 	if err == nil {
 		user.BirthDate = &formattedDate
@@ -59,7 +59,7 @@ func (s *userService) GetByID(ctx context.Context, id int64) (*models.User, erro
 	if err != nil {
 		return nil, err
 	}
-	formattedDate, err := utils.ParseDate(*user.BirthDate)
+	formattedDate, err := utils.ParseDate(user.BirthDate)
 	if err == nil {
 		user.BirthDate = &formattedDate
 	}
@@ -71,7 +71,7 @@ func (s *userService) GetByEmail(ctx context.Context, email string) (*models.Use
 	if err != nil {
 		return nil, err
 	}
-	formattedDate, err := utils.ParseDate(*user.BirthDate)
+	formattedDate, err := utils.ParseDate(user.BirthDate)
 	if err == nil {
 		user.BirthDate = &formattedDate
 	}
