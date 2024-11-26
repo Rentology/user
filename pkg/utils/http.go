@@ -28,7 +28,13 @@ func ReadRequest(c echo.Context, request interface{}) error {
 		return err
 	}
 	return validate.StructCtx(c.Request().Context(), request)
+}
 
+func ReadRequestForUpdate(c echo.Context, request interface{}) error {
+	if err := c.Bind(request); err != nil {
+		return err
+	}
+	return nil
 }
 
 func LogResponseError(ctx echo.Context, log *slog.Logger, err error) {

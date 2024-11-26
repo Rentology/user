@@ -18,7 +18,7 @@ func NewUserRepository(db *sqlx.DB) service.UserRepository {
 
 func (r *userRepository) Create(ctx context.Context, user *models.User) (*models.User, error) {
 	const op = "userRepository.create"
-	query := `INSERT INTO users (id, email, name, last_name, second_name, birth_date, sex) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`
+	query := `INSERT INTO users (id, email, phone, name, last_name, second_name, birth_date, sex) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`
 	if err := r.Db.QueryRowxContext(ctx, query, &user.ID, &user.Email, &user.Name, &user.LastName, &user.SecondName,
 		&user.BirthDate, &user.Sex).StructScan(user); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -48,6 +48,14 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 }
 
 func (r *userRepository) Update(ctx context.Context, user *models.User) (*models.User, error) {
-	//TODO implement me
-	panic("implement me")
+	const op = "userRepository.Update"
+	query := `UPDATE users
+			  SET email = $1, phone = $2, name = $3, last_name = $4, second_name = $5, birth_date = $6, sex = $7
+			  WHERE id = $8 RETURNING *`
+	newUser := &models.User{}
+	if err := r.Db.QueryRowxContext(ctx, query, user.Email, user.Phone, user.Name, user.LastName, user.SecondName,
+		user.BirthDate, user.Sex, user.ID).StructScan(newUser); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return newUser, nil
 }

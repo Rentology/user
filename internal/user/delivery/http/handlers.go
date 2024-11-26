@@ -85,3 +85,35 @@ func (h *userHandlers) GetUserByEmail() echo.HandlerFunc {
 		return c.JSON(http.StatusOK, user)
 	}
 }
+
+func (h *userHandlers) UpdateUser() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		ctx := utils.GetRequestCtx(c)
+		requestID := utils.GetRequestID(c)
+		h.log.Info("Handling UpdateUser", slog.String("request_id", requestID), slog.String("id", c.Param("id")))
+		user := &models.User{}
+		if err := utils.ReadRequestForUpdate(c, user); err != nil {
+			utils.LogResponseError(c, h.log, err)
+			return c.JSON(httpErrors.ErrorResponse(err))
+		}
+
+		if user.ID == 0 {
+			utils.LogResponseError(c, h.log, httpErrors.NewBadRequestError(httpErrors.BadRequest))
+			return c.JSON(httpErrors.ErrorResponse(httpErrors.NewBadRequestError(httpErrors.BadRequest)))
+		}
+
+		userClaims := c.Get("user").(map[string]interface{})
+		userIdFromClaims := userClaims["uid"].(float64)
+		if (int64(userIdFromClaims)) != user.ID {
+			utils.LogResponseError(c, h.log, httpErrors.Unauthorized)
+			return c.JSON(http.StatusUnauthorized, httpErrors.Unauthorized)
+		}
+
+		user, err := h.userService.Update(ctx, user)
+		if err != nil {
+			utils.LogResponseError(c, h.log, err)
+			return c.JSON(httpErrors.ErrorResponse(err))
+		}
+		return c.JSON(http.StatusOK, user)
+	}
+}

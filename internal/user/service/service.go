@@ -51,7 +51,36 @@ func (s *userService) Create(ctx context.Context, user *models.User) (*models.Us
 }
 
 func (s *userService) Update(ctx context.Context, user *models.User) (*models.User, error) {
-	panic("implement me")
+	currentUser, err := s.userRepo.GetByID(ctx, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	if user.Email != "" {
+		currentUser.Email = user.Email
+	}
+	if user.Phone != nil {
+		currentUser.Phone = user.Phone
+	}
+	if user.Name != nil {
+		currentUser.Name = user.Name
+	}
+	if user.LastName != nil {
+		currentUser.LastName = user.LastName
+	}
+	if user.SecondName != nil {
+		currentUser.SecondName = user.SecondName
+	}
+	if user.BirthDate != nil {
+		currentUser.BirthDate = user.BirthDate
+	}
+	if user.Sex != nil {
+		currentUser.Sex = user.Sex
+	}
+	currentUser, err = s.userRepo.Update(ctx, currentUser)
+	if err != nil {
+		return nil, err
+	}
+	return currentUser, nil
 }
 
 func (s *userService) GetByID(ctx context.Context, id int64) (*models.User, error) {
