@@ -18,7 +18,6 @@ const (
 func main() {
 	cfg := config.LoadConfig()
 	log := setupLogger(cfg.App.Env)
-
 	log.Info("starting user-service", slog.String("env", cfg.App.Env))
 	log.Debug("debug messages are enabled")
 
