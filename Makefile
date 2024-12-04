@@ -2,7 +2,7 @@ DATABASE_URL := postgres://postgres:123@localhost:5432/db?sslmode=disable
 MIGRATIONS_PATH := ./migrations
 
 ifeq ($(ENV),production)
-    DATABASE_URL := postgres://postgres:123@property_db:5432/property?sslmode=disable
+    DATABASE_URL := postgres://postgres:123@user_db:5432/property?sslmode=disable
 endif
 
 
