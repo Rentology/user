@@ -10,6 +10,7 @@ type Config struct {
 	App      AppConfig      `yaml:"app"`
 	Server   ServerConfig   `yaml:"server"`
 	Postgres PostgresConfig `yaml:"postgres"`
+	RabbitMQ RabbitMQConfig `yaml:"rabbit_mq"`
 }
 
 type AppConfig struct {
@@ -33,6 +34,11 @@ type PostgresConfig struct {
 	Password string `yaml:"password"`
 	DbName   string `yaml:"db_name"`
 	SslMode  bool   `yaml:"sslMode"`
+}
+
+type RabbitMQConfig struct {
+	Url       string `yaml:"url"`
+	QueueName string `yaml:"queue_name"`
 }
 
 func LoadConfig() *Config {

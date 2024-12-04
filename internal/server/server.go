@@ -82,7 +82,7 @@ func (s *Server) Run() error {
 }
 
 func (s *Server) runConsumer() error {
-	brokerConn, err := broker.NewBroker("amqp://guest:guest@localhost:5672/")
+	brokerConn, err := broker.NewBroker(s.cfg.RabbitMQ.Url)
 	if err != nil {
 		s.log.Error("Ошибка подключения к RabbitMQ", slog.String("error", err.Error()))
 		return err
@@ -91,7 +91,7 @@ func (s *Server) runConsumer() error {
 	s.log.Info("RabbitMQ connection established.")
 	repo := repository.NewUserRepository(s.db)
 	service := service2.NewUserService(s.cfg, repo, s.log)
-	userConsumer, err := broker.NewUserConsumer(service, brokerConn, "user_queue", s.log)
+	userConsumer, err := broker.NewUserConsumer(service, brokerConn, s.cfg.RabbitMQ.QueueName, s.log)
 	if err != nil {
 		s.log.Error("Ошибка создания consumer", slog.String("error", err.Error()))
 		return err
