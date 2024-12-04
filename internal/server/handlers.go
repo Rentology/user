@@ -21,8 +21,13 @@ func (s *Server) MapHandlers(e *echo.Echo) error {
 
 	mw := apiMiddlewares.NewMiddlewareManager(s.cfg, s.log, userService)
 
+	allowedOrigins := "http://localhost:3000"
+	if s.cfg.App.Env == "prod" {
+		allowedOrigins = "http://localhost:80"
+	}
+
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     []string{allowedOrigins},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPatch, http.MethodDelete},
 		AllowCredentials: true, // разрешает отправку учетных данных
